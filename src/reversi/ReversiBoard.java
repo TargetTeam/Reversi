@@ -17,7 +17,11 @@ package reversi;
  10-12-2006 version 0.1: initial release
  
  */
+import helper.HelperHeuristic;
 import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import sun.misc.Queue;
 
 enum TKind {
 
@@ -329,31 +333,103 @@ public class ReversiBoard {
         return res;
     }
 
-    public class HelperHeuristics {
+    private class ResultFindScore {
 
-        /* La heurística basada en esquinas. Propuesta por Peter Norvig
-         '( ( 120 -20 20 5 5 20 -20 120 ) 
-         ( -20 -40 -5 -5 -5 -5 -40 -20 ) 
-         ( 20 -5 15 3 3 15 -5 20 ) 
-         ( 5 -5 3 3 3 3 -5 5 ) 
-         ( 5 -5 3 3 3 3 -5 5 ) 
-         ( 20 -5 15 3 3 15 -5 20 ) 
-         ( -20 -40 -5 -5 -5 -5 -40 -20 ) 
-         ( 120 -20 20 5 5 20 -20 120 )))) 
-         */
-        int[][] weight = {{120, -20, 20, 5, 5, 20, -20, 120},
-            {-20, -40, -5, -5, -5, -5, -40, -20},
-            {20, -5, 15, 3, 3, 15, -5, 20},
-            {5, -5, 3, 3, 3, 3, -5, 5},
-            {5, -5, 3, 3, 3, 3, -5, 5},
-            {20, -5, 15, 3, 3, 15, -5, 20},
-            {-20, -40, -5, -5, -5, -5, -40, -20},
-            {120, -20, 20, 5, 5, 20, -20, 120}
-        };
+        int score;
+        Move move;
+    };
 
-        public int getHeuristicCornner(Move move) {
-            return weight[move.i][move.j];
+    public ResultFindScore minmax(int level, TKind me, TKind opponent) {
+        int min, score;
+        Queue queue = new Queue();
+        HelperHeuristic heuristic = new HelperHeuristic();
+        TKind[][] TempBoard = new TKind[8][8];
+        int[] TempCounter = new int[2];
+        ResultFindScore res = new ResultFindScore();
+        for (int i = 0; i < 8; i++) {
+            System.arraycopy(board[i], 0, TempBoard[i], 0, 8);
         }
+        System.arraycopy(counter, 0, TempCounter, 0, 2);
+        min = -10000;  // high value
+        level--;
+        //Buscar todos los movimientos posibles y guardarlos en la cola
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                if ((board[i][j] == TKind.nil) && (checkBoard(new Move(i, j), me) != 0)) {
+                    if (level != 0) {
+                        queue.enqueue(new Move(i, j));
+                    }
+                    for (int k = 0; k < 8; k++) {
+                        System.arraycopy(TempBoard[k], 0, board[k], 0, 8);
+                    }
+                    System.arraycopy(TempCounter, 0, counter, 0, 2);
+                }
+            }
+        }
+        //Para cada posible movimiento calcular el score basado en la heuristica y escoge el mejor
+        while (!queue.isEmpty()) {
+            try {
+                Move tmove = (Move) queue.dequeue();
+                score = heuristic.getHeuristicCornner(tmove);
+                if (min < score) {
+                    min = score;
+                    res.score = score;
+                    res.move = tmove;
+                }
+            } catch (InterruptedException ex) {
+                Logger.getLogger(ReversiBoard.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        res.score = min;
+        return res;
+    }
+
+    public boolean findMoveMinmax(TKind player, int llevel, Move move) {
+        TKind[][] TempBoard = new TKind[8][8];
+        int[] TempCounter = new int[2];
+        int nb, nw, min, n_min;
+        boolean found;
+        ResultFindScore res = new ResultFindScore();
+        Random random = new Random();
+
+        if (counter[0] + counter[1] >= 52 + llevel) {
+            llevel = counter[0] + counter[1] - 52;
+            if (llevel > 5) {
+                llevel = 5;
+            }
+        }
+
+        found = false;
+        min = -10000;  // high value
+        n_min = 1;
+
+        if (player == TKind.black) {
+            res = minmax(llevel - 1, player, TKind.white);
+        } else {
+            res = minmax(llevel - 1, player, TKind.black);
+        }
+        if (min < res.score) {
+            min = res.score;
+            move.i = res.move.i;
+            move.j = res.move.j;
+            found = true;
+        } else if (min == res.score) { // RANDOM MOVE GENERATOR
+            for (int i = 0; i < 8 && !found ; i++) {
+                for (int j = 0; j < 8 && !found; j++) {
+                    if ((board[i][j] == TKind.nil) && (checkBoard(new Move(i, j), player) != 0)) {
+                        move.i = i;
+                        move.j = j;
+                        for (int k = 0; k < 8; k++) {
+                            System.arraycopy(TempBoard[k], 0, board[k], 0, 8);
+                        }
+                        System.arraycopy(TempCounter, 0, counter, 0, 2);
+                        found = true;
+                    }
+                }
+            }
+        }
+
+        return found;
     }
 
     public void printBoard() {
