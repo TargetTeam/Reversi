@@ -17,7 +17,6 @@ package reversi;
  10-12-2006 version 0.1: initial release
  
  */
-import helper.HelperHeuristic;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -30,6 +29,7 @@ enum TKind {
 
 public class ReversiBoard {
 
+    int size = 8;
     TKind[][] board = new TKind[8][8];
     int[] counter = new int[2]; // 0 = black, 1 = white
     boolean PassCounter;
@@ -37,7 +37,11 @@ public class ReversiBoard {
     public ReversiBoard() {
         clear();
     }
-
+    public ReversiBoard(int size) {
+        board = new TKind[size][size];
+        this.size = size;
+        clear();
+    }
     public TKind get(int i, int j) {
         return board[i][j];
     }
@@ -67,8 +71,8 @@ public class ReversiBoard {
     }
 
     public void clear() {
-        for (int i = 0; i < 8; i++) {
-            for (int j = 0; j < 8; j++) {
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
                 board[i][j] = TKind.nil;
             }
         }
@@ -83,8 +87,8 @@ public class ReversiBoard {
 
     public void println() {
         System.out.print("[");
-        for (int i = 0; i < 8; i++) {
-            for (int j = 0; j < 8; j++) {
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
                 System.out.print(board[i][j] + ",");
             }
             System.out.println((i == 7 ? "]" : ""));
@@ -111,12 +115,12 @@ public class ReversiBoard {
         int n_inc = 0;
         x += incx;
         y += incy;
-        while ((x < 8) && (x >= 0) && (y < 8) && (y >= 0) && (board[x][y] == opponent)) {
+        while ((x < size) && (x >= 0) && (y < size) && (y >= 0) && (board[x][y] == opponent)) {
             x += incx;
             y += incy;
             n_inc++;
         }
-        if ((n_inc != 0) && (x < 8) && (x >= 0) && (y < 8) && (y >= 0) && (board[x][y] == kind)) {
+        if ((n_inc != 0) && (x < size) && (x >= 0) && (y < size) && (y >= 0) && (board[x][y] == kind)) {
             if (set) {
                 for (int j = 1; j <= n_inc; j++) {
                     x -= incx;
@@ -185,28 +189,28 @@ public class ReversiBoard {
 
     private int strategy(TKind me, TKind opponent) {
         int tstrat = 0;
-        for (int i = 0; i < 8; i++) {
+        for (int i = 0; i < size; i++) {
             if (board[i][0] == opponent) {
                 tstrat++;
             } else if (board[i][0] == me) {
                 tstrat--;
             }
         }
-        for (int i = 0; i < 8; i++) {
+        for (int i = 0; i < size; i++) {
             if (board[i][7] == opponent) {
                 tstrat++;
             } else if (board[i][7] == me) {
                 tstrat--;
             }
         }
-        for (int i = 0; i < 8; i++) {
+        for (int i = 0; i < size; i++) {
             if (board[0][i] == opponent) {
                 tstrat++;
             } else if (board[0][i] == me) {
                 tstrat--;
             }
         }
-        for (int i = 0; i < 8; i++) {
+        for (int i = 0; i < size; i++) {
             if (board[7][i] == opponent) {
                 tstrat++;
             } else if (board[7][i] == me) {
@@ -217,7 +221,7 @@ public class ReversiBoard {
     }
 
     public boolean findMove(TKind player, int llevel, Move move) {
-        TKind[][] TempBoard = new TKind[8][8];
+        TKind[][] TempBoard = new TKind[size][size];
         int[] TempCounter = new int[2];
         int nb, nw, min, n_min;
         boolean found;
@@ -231,15 +235,15 @@ public class ReversiBoard {
             }
         }
 
-        for (int i = 0; i < 8; i++) {
-            System.arraycopy(board[i], 0, TempBoard[i], 0, 8);
+        for (int i = 0; i < size; i++) {
+            System.arraycopy(board[i], 0, TempBoard[i], 0, size);
         }
         System.arraycopy(counter, 0, TempCounter, 0, 2);
         found = false;
         min = 10000;  // high value
         n_min = 1;
-        for (int i = 0; i < 8; i++) {
-            for (int j = 0; j < 8; j++) {
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
                 if ((board[i][j] == TKind.nil) && (checkBoard(new Move(i, j), player) != 0)) {
                     if (player == TKind.black) {
                         res = FindMax(llevel - 1, TKind.white, player);
@@ -264,8 +268,8 @@ public class ReversiBoard {
                     }
                     //             if found
                     //             then PreView(nw,nb);
-                    for (int k = 0; k < 8; k++) {
-                        System.arraycopy(TempBoard[k], 0, board[k], 0, 8);
+                    for (int k = 0; k < size; k++) {
+                        System.arraycopy(TempBoard[k], 0, board[k], 0, size);
                     }
                     System.arraycopy(TempCounter, 0, counter, 0, 2);
                 }
@@ -275,8 +279,8 @@ public class ReversiBoard {
     }
 
     public boolean userCanMove(TKind player) {
-        for (int i = 0; i < 8; i++) {
-            for (int j = 0; j < 8; j++) {
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
                 if ((board[i][j] == TKind.nil) && isValid(new Move(i, j), player)) {
                     return true;
                 }
@@ -292,20 +296,20 @@ public class ReversiBoard {
 
     private resultFindMax FindMax(int level, TKind me, TKind opponent) {
         int min, score, tnb, tnw;
-        TKind[][] TempBoard = new TKind[8][8];
+        TKind[][] TempBoard = new TKind[size][size];
         int[] TempCounter = new int[2];
         resultFindMax res = new resultFindMax();
         level--;
         res.nb = counter[0];
         res.nw = counter[1];
-        for (int i = 0; i < 8; i++) {
-            System.arraycopy(board[i], 0, TempBoard[i], 0, 8);
+        for (int i = 0; i < size; i++) {
+            System.arraycopy(board[i], 0, TempBoard[i], 0, size);
         }
         System.arraycopy(counter, 0, TempCounter, 0, 2);
         min = 10000;  // high value
 
-        for (int i = 0; i < 8; i++) {
-            for (int j = 0; j < 8; j++) {
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
                 if ((board[i][j] == TKind.nil) && (checkBoard(new Move(i, j), me) != 0)) {
                     if (level != 0) {
                         resultFindMax tres = FindMax(level, opponent, me);
@@ -322,8 +326,8 @@ public class ReversiBoard {
                         res.nb = tnb;
                         res.nw = tnw;
                     }
-                    for (int k = 0; k < 8; k++) {
-                        System.arraycopy(TempBoard[k], 0, board[k], 0, 8);
+                    for (int k = 0; k < size; k++) {
+                        System.arraycopy(TempBoard[k], 0, board[k], 0, size);
                     }
                     System.arraycopy(TempCounter, 0, counter, 0, 2);
                 }
@@ -343,24 +347,24 @@ public class ReversiBoard {
         int min, score;
         Queue queue = new Queue();
         HelperHeuristic heuristic = new HelperHeuristic();
-        TKind[][] TempBoard = new TKind[8][8];
+        TKind[][] TempBoard = new TKind[size][size];
         int[] TempCounter = new int[2];
         ResultFindScore res = new ResultFindScore();
-        for (int i = 0; i < 8; i++) {
-            System.arraycopy(board[i], 0, TempBoard[i], 0, 8);
+        for (int i = 0; i < size; i++) {
+            System.arraycopy(board[i], 0, TempBoard[i], 0, size);
         }
         System.arraycopy(counter, 0, TempCounter, 0, 2);
         min = -10000;  // high value
         level--;
         //Buscar todos los movimientos posibles y guardarlos en la cola
-        for (int i = 0; i < 8; i++) {
-            for (int j = 0; j < 8; j++) {
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
                 if ((board[i][j] == TKind.nil) && (checkBoard(new Move(i, j), me) != 0)) {
                     if (level != 0) {
                         queue.enqueue(new Move(i, j));
                     }
                     for (int k = 0; k < 8; k++) {
-                        System.arraycopy(TempBoard[k], 0, board[k], 0, 8);
+                        System.arraycopy(TempBoard[k], 0, board[k], 0, size);
                     }
                     System.arraycopy(TempCounter, 0, counter, 0, 2);
                 }
@@ -385,7 +389,7 @@ public class ReversiBoard {
     }
 
     public boolean findMoveMinmax(TKind player, int llevel, Move move) {
-        TKind[][] TempBoard = new TKind[8][8];
+        TKind[][] TempBoard = new TKind[size][size];
         int[] TempCounter = new int[2];
         int nb, nw, min, n_min;
         boolean found;
@@ -414,13 +418,13 @@ public class ReversiBoard {
             move.j = res.move.j;
             found = true;
         } else if (min == res.score) { // RANDOM MOVE GENERATOR
-            for (int i = 0; i < 8 && !found ; i++) {
+            for (int i = 0; i < size && !found ; i++) {
                 for (int j = 0; j < 8 && !found; j++) {
                     if ((board[i][j] == TKind.nil) && (checkBoard(new Move(i, j), player) != 0)) {
                         move.i = i;
                         move.j = j;
-                        for (int k = 0; k < 8; k++) {
-                            System.arraycopy(TempBoard[k], 0, board[k], 0, 8);
+                        for (int k = 0; k < size; k++) {
+                            System.arraycopy(TempBoard[k], 0, board[k], 0, size);
                         }
                         System.arraycopy(TempCounter, 0, counter, 0, 2);
                         found = true;
@@ -433,8 +437,8 @@ public class ReversiBoard {
     }
 
     public void printBoard() {
-        for (int i = 0; i < 8; i++) {
-            for (int j = 0; j < 8; j++) {
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
                 if ((board[i][j] == TKind.nil)) {
                     System.out.print("0 ");
                 }

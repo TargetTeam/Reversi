@@ -11,7 +11,7 @@ package reversi;
 public class Test {
 
     public static void main(String[] args) {
-        ReversiBoard board = new ReversiBoard();
+        ReversiBoard board = new ReversiBoard(10);
         Move move = new Move();
         int n = 1;
         int win = 0;
@@ -19,17 +19,18 @@ public class Test {
         for (int i = 0; i < n; i++) {
             board.clear();
             while (board.userCanMove(TKind.black) || board.userCanMove(TKind.white)) {
-                if (board.findMoveMinmax(TKind.black, 4, move)) {
+                if (board.findMove(TKind.black, 4, move)) {
                     board.move(move, TKind.black);
-                    System.out.println("Move Black");
-                    board.printBoard();
+                    //System.out.println("Move Black");
+                    //board.printBoard();
                 }
                 if (board.findMove(TKind.white, 4, move)) {
                     board.move(move, TKind.white);
-                    System.out.println("Move White");
-                    board.printBoard();
+                    //System.out.println("Move White");
+                    //board.printBoard();
                 }
             }
+            board.printBoard();
             System.out.print("Iteration#=" + i + " Result:" + board.getCounter(TKind.black) + "-" + board.getCounter(TKind.white));
             if (board.getCounter(TKind.black) > board.getCounter(TKind.white)) {
                 win++;
